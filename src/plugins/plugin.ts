@@ -97,8 +97,23 @@ function callCordovaPlugin(pluginObj: any, methodName: string, args: any[], opts
     };
   }
 
-  // TODO: Illegal invocation needs window context
-  return get(window, pluginObj.pluginRef)[methodName].apply(pluginInstance, args);
+    return getPromise((resolve, reject) => {
+        document.addEventListener('ondeviceready', () => {
+           resolve();
+        });
+    }).then(
+        () => { // Device is ready
+            // TODO Illegal invocation needs window context
+            return get(window, pluginObj.pluginRef)[methodName].apply(pluginInstance, args);
+        },
+        () => { // ondeviceready event never fired
+            // this is probably not needed, but I have it here just in case
+            return {
+                error: 'ondeviceready_not_fired'
+            };
+        }
+    );
+
 }
 
 function getPromise(cb) {
